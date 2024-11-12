@@ -4,21 +4,39 @@ namespace TagsCloudVisualization;
 
 public class CircularCloudLayouter : ICircularCloudLayouter
 {
-    private readonly Point center;
-    private  IEnumerator<Point> pointEnumerator;
-    private List<Rectangle> rectangles = new List<Rectangle>();
+    private readonly Point layoutCenter;
+    private readonly  IEnumerator<Point> pointEnumerator;
+    private List<Rectangle> layoutRectangles = new List<Rectangle>();
     
-    public CircularCloudLayouter(Point center, double radius, double angleOffset)
+    public CircularCloudLayouter(Point layoutCenter, double radius, double angleOffset)
     {
-        this.center = center;
+        this.layoutCenter = layoutCenter;
         pointEnumerator = new FermatSpiralPointsGenerator(radius, angleOffset)
-            .GeneratePoints(center)
+            .GeneratePoints(layoutCenter)
             .GetEnumerator();
     }
 
     public Rectangle PutNextRectangle(Size rectangleSize)
     {
-        return new Rectangle(rectangleSize.Width / 2, rectangleSize.Height / 2, rectangleSize.Width, rectangleSize.Height);
+        Rectangle rectangle;
+        do
+        {
+            pointEnumerator.MoveNext();
+            var rectanglePos = pointEnumerator.Current;
+            rectangle = CreateRectangleWithCenter(rectanglePos, rectangleSize);
+            
+        } while (layoutRectangles.Any(rectangle.IntersectsWith));
+        
+        layoutRectangles.Add(rectangle);
+
+        return rectangle;
+    }
+
+    private static Rectangle CreateRectangleWithCenter(Point center, Size rectangleSize)
+    {
+        var x = center.X - rectangleSize.Width / 2;
+        var y = center.Y - rectangleSize.Height / 2;
+        return new Rectangle(x, y, rectangleSize.Width, rectangleSize.Height);
     }
     
     
