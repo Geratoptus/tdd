@@ -1,6 +1,7 @@
 using System.Drawing;
+using TagsCloudVisualization.PointsGenerators;
 
-namespace TagsCloudVisualization;
+namespace TagsCloudVisualization.CloudLayouters;
 
 public class CircularCloudLayouter : ICircularCloudLayouter
 {
