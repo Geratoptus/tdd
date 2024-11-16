@@ -30,7 +30,7 @@ public class RandomExtensionTest
         var randomSize = new Random(seed);
         var randomExpected = new Random(seed);
         
-        var actualSize = randomSize.RandomSize(1, int.MaxValue);
+        var actualSize = randomSize.RandomSize();
         var expectedSize = new Size(
             randomExpected.Next(1, int.MaxValue), 
             randomExpected.Next(1, int.MaxValue));
@@ -43,5 +43,20 @@ public class RandomExtensionTest
     {
         this.random.RandomPoint().Should().BeOfType<Point>();
     }
-    
+
+    [Test]
+    [Repeat(10)]
+    public void RandomPoint_ShouldReturnExpectedRandomPoint()
+    {
+        var seed = this.random.Next();
+        var pointRandomizer = new Random(seed);
+        var expectedRandomizer = new Random(seed);
+        
+        var actualPoint = pointRandomizer.RandomPoint();
+        var expectedPoint = new Point(
+            expectedRandomizer.Next(int.MinValue, int.MaxValue), 
+            expectedRandomizer.Next(int.MinValue, int.MaxValue));
+        
+        actualPoint.Should().BeEquivalentTo(expectedPoint);
+    }
 }
