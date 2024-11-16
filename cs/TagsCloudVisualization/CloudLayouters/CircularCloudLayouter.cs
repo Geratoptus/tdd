@@ -5,13 +5,14 @@ namespace TagsCloudVisualization.CloudLayouters;
 
 public class CircularCloudLayouter : ICircularCloudLayouter
 {
-    private readonly Point layoutCenter;
+    public Point LayoutCenter { get; private set; }
+    
     private readonly  IEnumerator<Point> pointEnumerator;
     private List<Rectangle> layoutRectangles = new List<Rectangle>();
     
     public CircularCloudLayouter(Point layoutCenter, double radius, double angleOffset)
     {
-        this.layoutCenter = layoutCenter;
+        LayoutCenter = layoutCenter;
         pointEnumerator = new FermatSpiralPointsGenerator(radius, angleOffset)
             .GeneratePoints(layoutCenter)
             .GetEnumerator();
@@ -33,12 +34,11 @@ public class CircularCloudLayouter : ICircularCloudLayouter
         return rectangle;
     }
 
-    private static Rectangle CreateRectangleWithCenter(Point center, Size rectangleSize)
+    public Rectangle CreateRectangleWithCenter(Point center, Size rectangleSize)
     {
         var x = center.X - rectangleSize.Width / 2;
         var y = center.Y - rectangleSize.Height / 2;
         return new Rectangle(x, y, rectangleSize.Width, rectangleSize.Height);
     }
-    
-    
+
 }
