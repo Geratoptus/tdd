@@ -21,7 +21,7 @@ public class RandomExtensionTest
         var randomSizeInvoke = () => random.RandomSize(minValue, maxValue);
         randomSizeInvoke.Should().Throw<ArgumentOutOfRangeException>();
     }
-
+    
     [Test]
     [Repeat(10)]
     public void RandomSize_ShouldReturnExpectedRandomSize()
@@ -37,4 +37,11 @@ public class RandomExtensionTest
         
         actualSize.Should().BeEquivalentTo(expectedSize);
     }
+
+    [Test]
+    public void RandomPoint_ShouldReturnPoint()
+    {
+        this.random.RandomPoint().Should().BeOfType<Point>();
+    }
+    
 }
