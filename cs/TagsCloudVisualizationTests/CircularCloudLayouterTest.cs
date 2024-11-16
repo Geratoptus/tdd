@@ -3,6 +3,7 @@ using System.Drawing;
 using FluentAssertions;
 using NUnit.Framework;
 using TagsCloudVisualization.CloudLayouters;
+using TagsCloudVisualization.Extensions;
 
 namespace TagsCloudVisualizationTests;
 
@@ -21,13 +22,7 @@ public class CircularCloudLayouterTest
         var circularCloudLayouter = new CircularCloudLayouter(new Point(0, 0), 1, 0.5);
         
         for (var i = 0; i < rectanglesNumber; i++)
-        {
-            var width = randomizer.Next(10, 25);
-            var height = randomizer.Next(10, 25);
-            var size = new Size(width, height);
-            
-            rectangles[i] = circularCloudLayouter.PutNextRectangle(size);
-        }
+            rectangles[i] = circularCloudLayouter.PutNextRectangle(randomizer.RandomSize(10, 25));
 
         IsIntersectionBetweenRectangles(rectangles).Should().BeFalse();
     }

@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using TagsCloudVisualization.CloudLayouters;
+using TagsCloudVisualization.Extensions;
 using TagsCloudVisualization.Visualizers;
 
 namespace TagsCloudVisualization;
@@ -27,9 +28,8 @@ public static class Program
         var rectangles = new Rectangle[RectanglesNumber];
 
         rectangles = rectangles
-            .Select(_ => cloudLayouter.PutNextRectangle(new Size(
-                random.Next(MinRectangleSize, MaxRectangleSize),
-                random.Next(MinRectangleSize, MaxRectangleSize))))
+            .Select(_ => cloudLayouter.PutNextRectangle(random.RandomSize
+                (MinRectangleSize, MaxRectangleSize)))
             .ToArray();
         
         var visualizer = new DefaultVisualizer();
