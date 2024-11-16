@@ -1,4 +1,5 @@
 using System;
+using System.Drawing;
 using FluentAssertions;
 using NUnit.Framework;
 using TagsCloudVisualization.Extensions;
@@ -19,5 +20,21 @@ public class RandomExtensionTest
     {
         var randomSizeInvoke = () => random.RandomSize(minValue, maxValue);
         randomSizeInvoke.Should().Throw<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
+    [Repeat(10)]
+    public void RandomSize_ShouldReturnExpectedRandomSize()
+    {
+        var seed = this.random.Next();
+        var randomSize = new Random(seed);
+        var randomExpected = new Random(seed);
+        
+        var actualSize = randomSize.RandomSize(1, int.MaxValue);
+        var expectedSize = new Size(
+            randomExpected.Next(1, int.MaxValue), 
+            randomExpected.Next(1, int.MaxValue));
+        
+        actualSize.Should().BeEquivalentTo(expectedSize);
     }
 }
