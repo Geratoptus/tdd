@@ -10,6 +10,7 @@ public static class RandomExtension
             throw new ArgumentOutOfRangeException(nameof(minValue), "minValue must be positive");
         if (minValue > maxValue)
             throw new ArgumentOutOfRangeException(nameof(minValue), "minValue must be less than maxValue");
-        return new Size();
+        
+        return new Size(random.Next(minValue, maxValue), random.Next(minValue, maxValue));
     }
 }
