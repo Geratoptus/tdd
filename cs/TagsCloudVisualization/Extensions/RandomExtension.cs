@@ -14,8 +14,8 @@ public static class RandomExtension
         return new Size(random.Next(minValue, maxValue), random.Next(minValue, maxValue));
     }
 
-    public static Point RandomPoint(this Random random, int minValue=1, int maxValue=int.MaxValue)
+    public static Point RandomPoint(this Random random, int minValue=int.MinValue, int maxValue=int.MaxValue)
     {
-        return new Point();
+        return new Point(random.Next(minValue, maxValue), random.Next(minValue, maxValue));
     }
 }
