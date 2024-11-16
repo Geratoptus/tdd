@@ -1,36 +1,32 @@
 using System.Drawing;
+using TagsCloudVisualization.Extensions;
 using TagsCloudVisualization.PointsGenerators;
 
 namespace TagsCloudVisualization.CloudLayouters;
 
-public class CircularCloudLayouter : ICircularCloudLayouter
+public class CircularCloudLayouter(Point layoutCenter, IPointsGenerator pointsGenerator) : ICircularCloudLayouter
 {
-    public Point LayoutCenter { get; private set; }
-    
-    private readonly  IEnumerator<Point> pointEnumerator;
-    private List<Rectangle> layoutRectangles = new List<Rectangle>();
-    
-    public CircularCloudLayouter(Point layoutCenter, double radius, double angleOffset)
+    public Point LayoutCenter { get; } = layoutCenter;
+
+    private readonly IEnumerator<Point> pointEnumerator = pointsGenerator
+        .GeneratePoints(layoutCenter)
+        .GetEnumerator();
+    private readonly List<Rectangle> layoutRectangles = [];
+
+    public CircularCloudLayouter(Point layoutCenter, double radius, double angleOffset) :
+        this(layoutCenter, new FermatSpiralPointsGenerator(radius, angleOffset))
     {
-        LayoutCenter = layoutCenter;
-        pointEnumerator = new FermatSpiralPointsGenerator(radius, angleOffset)
-            .GeneratePoints(layoutCenter)
-            .GetEnumerator();
+        
     }
 
     public Rectangle PutNextRectangle(Size rectangleSize)
     {
-        Rectangle rectangle;
-        do
-        {
-            pointEnumerator.MoveNext();
-            var rectanglePos = pointEnumerator.Current;
-            rectangle = CreateRectangleWithCenter(rectanglePos, rectangleSize);
-            
-        } while (layoutRectangles.Any(rectangle.IntersectsWith));
+        var rectangle = pointEnumerator
+            .ToIEnumerable()
+            .Select(point => CreateRectangleWithCenter(point, rectangleSize))
+            .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));;
         
         layoutRectangles.Add(rectangle);
-
         return rectangle;
     }
 
