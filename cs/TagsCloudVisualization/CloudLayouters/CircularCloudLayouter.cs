@@ -24,7 +24,7 @@ public class CircularCloudLayouter(Point layoutCenter, IPointsGenerator pointsGe
         var rectangle = pointEnumerator
             .ToIEnumerable()
             .Select(point => CreateRectangleWithCenter(point, rectangleSize))
-            .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));;
+            .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));
         
         layoutRectangles.Add(rectangle);
         return rectangle;
