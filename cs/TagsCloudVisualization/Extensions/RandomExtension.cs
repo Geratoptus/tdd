@@ -16,6 +16,6 @@ public static class RandomExtension
 
     public static Point RandomPoint(this Random random, int minValue=1, int maxValue=int.MaxValue)
     {
-        throw new NotImplementedException();
+        return new Point();
     }
 }
