@@ -1,10 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NUnit.Framework;
+using NUnit.Framework.Interfaces;
 using TagsCloudVisualization.CloudLayouters;
 using TagsCloudVisualization.Extensions;
+using TagsCloudVisualization.Savers;
+using TagsCloudVisualization.Visualizers;
 
 namespace TagsCloudVisualizationTests;
 
@@ -13,7 +18,33 @@ namespace TagsCloudVisualizationTests;
 public class CircularCloudLayouterTest
 {
     private readonly Random randomizer = new();
+    private Rectangle[] testRectangles = null!;
+    private const string ImagesDirectory = "testImages";
+    private const string RectanglesDirectory = "testRectangles";
+    
+    [TearDown]
+    public void TearDown()
+    {
+        var currentContext = TestContext.CurrentContext;
+        if (currentContext.Result.Outcome.Status != TestStatus.Failed)
+            return;
+        
+        var visualizer = new DefaultVisualizer(GetLayoutSize(testRectangles));
+        
+        using var bitmap = visualizer.CreateBitmap(testRectangles);
+        var saver = new DefaultBitmapSaver(ImagesDirectory);
+        saver.SaveBitmap(bitmap, currentContext.Test.Name + ".jpg");
 
+        SaveInformationAboutTestRectangles(currentContext);
+        
+        TestContext.Out
+            .WriteLine($"Tag cloud visualization saved to file " +
+                       $"{Path.Combine(ImagesDirectory, currentContext.Test.Name + ".jpg")}");
+        TestContext.Out
+            .WriteLine($"Information about testRectangles saved to file " +
+                       $"{Path.Combine(RectanglesDirectory, currentContext.Test.Name + "txt")}");
+    }
+    
     [Test]
     public void PutNextRectangle_ShouldReturnRectangle()
     {
@@ -22,6 +53,7 @@ public class CircularCloudLayouterTest
 
         var rectangle = circularCloudLayouter.PutNextRectangle(rectangleSize);
         
+        testRectangles = [rectangle];
         rectangle.Should().BeOfType<Rectangle>();
     }
     
@@ -37,6 +69,7 @@ public class CircularCloudLayouterTest
         var expectedRectangle = circularCloudLayouter
             .CreateRectangleWithCenter(circularCloudLayouter.LayoutCenter, rectangleSize);
         
+        testRectangles = [actualRectangle];
         actualRectangle.Should().BeEquivalentTo(expectedRectangle);
     }
 
@@ -48,6 +81,7 @@ public class CircularCloudLayouterTest
 
         var actualRectangle = circularCloudLayouter.PutNextRectangle(rectangleSize);
         
+        testRectangles = [actualRectangle];
         actualRectangle.Size.Should().Be(rectangleSize);
     }
     
@@ -58,9 +92,9 @@ public class CircularCloudLayouterTest
         var rectanglesNumber = randomizer.Next(100, 250);
         var circularCloudLayouter = SetupLayouterWithRandomParameters();
         
-        var rectangles = PutRectanglesInLayouter(rectanglesNumber, circularCloudLayouter);
+        testRectangles = PutRectanglesInLayouter(rectanglesNumber, circularCloudLayouter);
         
-        IsIntersectionBetweenRectangles(rectangles).Should().BeFalse();
+        IsIntersectionBetweenRectangles(testRectangles).Should().BeFalse();
     }
 
     [Test]
@@ -69,17 +103,14 @@ public class CircularCloudLayouterTest
     {
         const double allowableDelta = 0.35;
 
-        var circularCloudLayouter = SetupLayouterWithOptimalParameters();
-        var rectangles = PutRectanglesInLayouter(randomizer.Next(800, 1200), circularCloudLayouter);
+        var circularCloudLayouter = SetupLayouterWithOptimalParameters(); 
+        testRectangles = PutRectanglesInLayouter(randomizer.Next(800, 1200), circularCloudLayouter);
 
-        var layoutWidth = rectangles.Max(rectangle => rectangle.Right) - 
-                          rectangles.Min(rectangle => rectangle.Left);
-        var layoutHeight = rectangles.Max(rectangle => rectangle.Top) -
-                           rectangles.Min(rectangle => rectangle.Bottom);
+        var layoutSize = GetLayoutSize(testRectangles);
         
-        var circumcircleDiameter = Math.Max(layoutHeight, layoutWidth);
+        var circumcircleDiameter = Math.Max(layoutSize.Height, layoutSize.Width);
         var circumcircleArea = Math.PI * Math.Pow(circumcircleDiameter, 2) / 4;
-        var rectanglesArea = (double)rectangles
+        var rectanglesArea = (double)testRectangles
             .Select(rectangle => rectangle.Height * rectangle.Width)
             .Sum();
         
@@ -124,4 +155,23 @@ public class CircularCloudLayouterTest
 
         return false;
     }
+
+    private void SaveInformationAboutTestRectangles(TestContext currentContext)
+    {
+        var rectanglesPath = Path.Combine(RectanglesDirectory, 
+            currentContext.Test.Name + ".txt");
+        Directory.CreateDirectory(RectanglesDirectory);
+        File.WriteAllLines(rectanglesPath, 
+            testRectangles.Select(rectangle => rectangle.ToString()).ToArray());
+    }
+    
+    private Size GetLayoutSize(IEnumerable<Rectangle> rectangles)
+    {
+        var layoutWidth = testRectangles.Max(rectangle => rectangle.Right) - 
+                          testRectangles.Min(rectangle => rectangle.Left);
+        var layoutHeight = testRectangles.Max(rectangle => rectangle.Top) -
+                           testRectangles.Min(rectangle => rectangle.Bottom);
+        return new Size(layoutWidth, layoutHeight);
+    }
+    
 }
