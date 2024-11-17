@@ -21,11 +21,20 @@ public class CircularCloudLayouter(Point layoutCenter, IPointsGenerator pointsGe
 
     public Rectangle PutNextRectangle(Size rectangleSize)
     {
-        var rectangle = pointEnumerator
+        var rectangles = pointEnumerator
             .ToIEnumerable()
-            .Select(point => CreateRectangleWithCenter(point, rectangleSize))
-            .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));
-        
+            .Select(point => CreateRectangleWithCenter(point, rectangleSize));
+        var rectangle = new Rectangle();
+        try
+        {
+            rectangle = rectangles
+                .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));
+        }
+        catch (InvalidOperationException e)
+        {
+            throw new InvalidOperationException("Был передан конечный генератор точек");
+        }
+
         layoutRectangles.Add(rectangle);
         return rectangle;
     }
