@@ -3,6 +3,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using TagsCloudVisualization.CloudLayouters;
 using TagsCloudVisualization.Extensions;
+using TagsCloudVisualization.Savers;
 using TagsCloudVisualization.Visualizers;
 
 namespace TagsCloudVisualization;
@@ -36,14 +37,9 @@ public static class Program
         
         var visualizer = new DefaultVisualizer(new Size(ImageWidth, ImageHeight));
         var bitmap = visualizer.CreateBitmap(rectangles);
-        Directory.CreateDirectory(ImagesDirectory);
+        var saver = new DefaultBitmapSaver(ImagesDirectory);
         
-        bitmap.Save(GetPathToImages(), ImageFormat.Jpeg);
-    }
-    
-    private static string GetPathToImages()
-    {
-        var filename = $"{RectanglesNumber}_{LayoutRadius}_{LayoutAngleOffset}_TagCloud.jpg";
-        return Path.Combine(ImagesDirectory, filename);
+        saver.SaveBitmap(bitmap,
+            $"{RectanglesNumber}_{LayoutRadius}_{LayoutAngleOffset}_TagCloud.jpg");
     }
 }
