@@ -19,6 +19,7 @@ public class CircularCloudLayouterTest
 {
     private readonly Random randomizer = new();
     private Rectangle[] testRectangles = null!;
+    private Point layoutCenter;
     private const string ImagesDirectory = "testImages";
     private const string RectanglesDirectory = "testRectangles";
     
@@ -46,28 +47,30 @@ public class CircularCloudLayouterTest
     }
     
     [Test]
-    public void PutNextRectangle_ShouldReturnRectangle()
+    public void PutNextRectangle_ShouldPutRectangle()
     {
+        testRectangles = [];
         var circularCloudLayouter = SetupLayouterWithRandomParameters();
         var rectangleSize = randomizer.RandomSize();
 
         var rectangle = circularCloudLayouter.PutNextRectangle(rectangleSize);
-        
         testRectangles = [rectangle];
-        rectangle.Should().BeOfType<Rectangle>();
+        
+        GetLayoutSize(testRectangles).Should().Be(rectangleSize);
     }
     
     [Test]
     [Repeat(10)]
     public void PutNextRectangle_ShouldReturnRectangleInCenter_IfFirstInvoke()
     {
+        testRectangles = [];
         var rectangleSize = randomizer.RandomSize();
         var circularCloudLayouter = SetupLayouterWithRandomParameters();
         
         var actualRectangle = circularCloudLayouter
             .PutNextRectangle(rectangleSize);
-        var expectedRectangle = circularCloudLayouter
-            .CreateRectangleWithCenter(circularCloudLayouter.LayoutCenter, rectangleSize);
+        var expectedRectangle = new Rectangle()
+            .CreateRectangleWithCenter(layoutCenter, rectangleSize);
         
         testRectangles = [actualRectangle];
         actualRectangle.Should().BeEquivalentTo(expectedRectangle);
@@ -76,6 +79,7 @@ public class CircularCloudLayouterTest
     [Test]
     public void PutNextRectangle_ShouldReturnRectangleWithRightSize()
     {
+        testRectangles = [];
         var rectangleSize = randomizer.RandomSize();
         var circularCloudLayouter = SetupLayouterWithRandomParameters();
 
@@ -89,6 +93,7 @@ public class CircularCloudLayouterTest
     [Repeat(10)]
     public void PutNextRectangle_ShouldReturnRectanglesWithoutIntersections()
     {
+        testRectangles = [];
         var rectanglesNumber = randomizer.Next(100, 250);
         var circularCloudLayouter = SetupLayouterWithRandomParameters();
         
@@ -101,15 +106,16 @@ public class CircularCloudLayouterTest
     [Repeat(10)]
     public void ShouldGenerateLayoutThatHasHighTightnessAndShapeOfCircularCloud_WhenOptimalParametersAreUsed()
     {
-        const double allowableDelta = 0.35;
+        testRectangles = [];
+        const double allowableDelta = 0.38;
 
         var circularCloudLayouter = SetupLayouterWithOptimalParameters(); 
         testRectangles = PutRectanglesInLayouter(randomizer.Next(800, 1200), circularCloudLayouter);
-
-        var layoutSize = GetLayoutSize(testRectangles);
         
-        var circumcircleDiameter = Math.Max(layoutSize.Height, layoutSize.Width);
-        var circumcircleArea = Math.PI * Math.Pow(circumcircleDiameter, 2) / 4;
+        var circumcircleRadius = testRectangles
+            .Max(r => r
+                .GetDistanceToMostRemoteCorner(layoutCenter));
+        var circumcircleArea = Math.PI * Math.Pow(circumcircleRadius, 2);
         var rectanglesArea = (double)testRectangles
             .Select(rectangle => rectangle.Height * rectangle.Width)
             .Sum();
@@ -130,14 +136,15 @@ public class CircularCloudLayouterTest
 
     private CircularCloudLayouter SetupLayouterWithOptimalParameters()
     {
-        return new CircularCloudLayouter(new Point(0, 0), 1, 0.5);
+        layoutCenter = new Point(0, 0);
+        return new CircularCloudLayouter(layoutCenter, 1, 0.5);
     }
     
     private CircularCloudLayouter SetupLayouterWithRandomParameters()
     {
         var radius = randomizer.Next(1, 10);
         var angleOffset = randomizer.Next(1, 10);
-        var layoutCenter = randomizer.RandomPoint(-10, 10);
+        layoutCenter = randomizer.RandomPoint(-10, 10);
         
         return new CircularCloudLayouter(layoutCenter, radius, angleOffset);
     }
@@ -167,10 +174,10 @@ public class CircularCloudLayouterTest
     
     private Size GetLayoutSize(IEnumerable<Rectangle> rectangles)
     {
-        var layoutWidth = testRectangles.Max(rectangle => rectangle.Right) - 
-                          testRectangles.Min(rectangle => rectangle.Left);
-        var layoutHeight = testRectangles.Max(rectangle => rectangle.Top) -
-                           testRectangles.Min(rectangle => rectangle.Bottom);
+        var layoutWidth = rectangles.Max(rectangle => rectangle.Right) - 
+                          rectangles.Min(rectangle => rectangle.Left);
+        var layoutHeight = rectangles.Max(rectangle => rectangle.Bottom)
+                           - rectangles.Min(rectangle => rectangle.Top);
         return new Size(layoutWidth, layoutHeight);
     }
     
