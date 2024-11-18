@@ -6,8 +6,8 @@ namespace TagsCloudVisualization.CloudLayouters;
 
 public class CircularCloudLayouter(Point layoutCenter, IPointsGenerator pointsGenerator) : ICircularCloudLayouter
 {
-    public Point LayoutCenter { get; } = layoutCenter;
-
+    private const string FiniteGeneratorExceptionMessage =
+        "В конструктор CircularCloudLayouter был передан конечный генератор точек";
     private readonly IEnumerator<Point> pointEnumerator = pointsGenerator
         .GeneratePoints(layoutCenter)
         .GetEnumerator();
@@ -21,29 +21,17 @@ public class CircularCloudLayouter(Point layoutCenter, IPointsGenerator pointsGe
 
     public Rectangle PutNextRectangle(Size rectangleSize)
     {
-        var rectangles = pointEnumerator
+        var rectangle = pointEnumerator
             .ToIEnumerable()
-            .Select(point => CreateRectangleWithCenter(point, rectangleSize));
-        var rectangle = new Rectangle();
-        try
-        {
-            rectangle = rectangles
-                .First(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));
-        }
-        catch (InvalidOperationException e)
-        {
-            throw new InvalidOperationException("Был передан конечный генератор точек");
-        }
+            .Select(point => new Rectangle()
+                .CreateRectangleWithCenter(point, rectangleSize))
+            .FirstOrDefault(rectangle => !layoutRectangles.Any(rectangle.IntersectsWith));
+        
+        if (rectangle.IsEmpty)
+            throw new InvalidOperationException(FiniteGeneratorExceptionMessage);
 
         layoutRectangles.Add(rectangle);
         return rectangle;
-    }
-
-    public Rectangle CreateRectangleWithCenter(Point center, Size rectangleSize)
-    {
-        var x = center.X - rectangleSize.Width / 2;
-        var y = center.Y - rectangleSize.Height / 2;
-        return new Rectangle(x, y, rectangleSize.Width, rectangleSize.Height);
     }
 
 }
