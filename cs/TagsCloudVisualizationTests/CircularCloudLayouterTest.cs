@@ -8,6 +8,7 @@ using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using TagsCloudVisualization.CloudLayouters;
 using TagsCloudVisualization.Extensions;
+using TagsCloudVisualization.PointsGenerators;
 using TagsCloudVisualization.Savers;
 using TagsCloudVisualization.Visualizers;
 
@@ -57,6 +58,17 @@ public class CircularCloudLayouterTest
         testRectangles = [rectangle];
         
         GetLayoutSize(testRectangles).Should().Be(rectangleSize);
+    }
+
+    [Test]
+    public void PutNextRectangle_ShouldThrowInvalidOperationException_IfFiniteGenerator()
+    {
+        var finiteGenerator = new FinitePointsGenerator(0);
+        var circularCloudLayouter = new CircularCloudLayouter(new Point(0, 0), finiteGenerator);
+        var invoke = () => circularCloudLayouter.PutNextRectangle(new Size(1, 1));
+        
+        invoke.Should().Throw<InvalidOperationException>();
+
     }
     
     [Test]
@@ -179,6 +191,15 @@ public class CircularCloudLayouterTest
         var layoutHeight = rectangles.Max(rectangle => rectangle.Bottom)
                            - rectangles.Min(rectangle => rectangle.Top);
         return new Size(layoutWidth, layoutHeight);
+    }
+
+    class FinitePointsGenerator(int end) : IPointsGenerator
+    {
+        public IEnumerable<Point> GeneratePoints(Point startPoint)
+        {
+            return Enumerable.Range(0, end)
+                .Select(x => new Point(x, x));
+        }
     }
     
 }
