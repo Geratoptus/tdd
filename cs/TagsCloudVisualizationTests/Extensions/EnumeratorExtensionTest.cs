@@ -26,4 +26,19 @@ public class EnumeratorExtensionTest
         actualEnumerable.Take(elementsNumber).Should()
             .BeEquivalentTo(expectedEnumerable.Take(elementsNumber));
     }
+
+    [Test]
+    public void ToIEnumerable_ShouldContinueEnumeration()
+    {
+        const int elementsNumber = 10;
+        
+        var startEnumerable = Enumerable.Range(0, elementsNumber);
+        using var movedEnumerator = startEnumerable.GetEnumerator();
+        movedEnumerator.MoveNext();
+        var actualEnumerable = movedEnumerator.ToIEnumerable();
+        var expectedEnumerable = Enumerable.Range(1, elementsNumber - 1);
+
+        actualEnumerable.Should().BeEquivalentTo(expectedEnumerable);
+        
+    }
 }
